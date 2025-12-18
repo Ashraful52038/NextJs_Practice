@@ -1,7 +1,7 @@
 'use client';
 import { createContext, ReactNode, useReducer } from 'react';
 
-//Types
+//Types define
 type counterState={
     count:number;
 };
@@ -30,7 +30,6 @@ function counterReducer(state:counterState,action:counterAction):counterState{
 }
 
 //context type
-
 export const CounterContext = createContext({})
     
 export default function CounterProvider({children}: {children: ReactNode}){
