@@ -1,33 +1,43 @@
 'use client';
-import { createContext, useState } from 'react';
+import { createContext, ReactNode, useReducer } from 'react';
+
+//Types
+type counterState={
+    count:number;
+};
+
+type counterAction=
+| {type:'INCREMENT'}
+| {type:'DECREMENT'}
+| {type:'RESET'}
+| {type: 'SET_COUNT'; payload: number};
+
+
+//Reducer function
+function counterReducer(state:counterState,action:counterAction):counterState{
+    switch(action.type){
+        case 'INCREMENT':
+            return {count: state.count + 1};
+        case 'DECREMENT':
+            return {count: state.count - 1};
+        case 'RESET':
+            return {count: 0};
+        case 'SET_COUNT':
+            return {count: action.payload};
+        default:
+            return state;
+    }
+}
+
+//context type
 
 export const CounterContext = createContext({})
     
-export default function CounterProvider({
-children,
-}: {
-children: React.ReactNode
-}){
+export default function CounterProvider({children}: {children: ReactNode}){
+    const [state, dispatch] = useReducer(counterReducer, {count:0});
 
-const [count,setCount]= useState(0);
-
-const increment=()=>{
-    setCount(prev => prev+1);
-};
-
-const decrement =()=>{
-    setCount( prev => prev-1);
-};
-
-const value={
-    count,
-    increment,
-    decrement
-};
-
-
-    return (
-    <CounterContext.Provider value={value}>
+    return(
+    <CounterContext.Provider value={{state, dispatch}}>
         {children}
     </CounterContext.Provider>
     );
