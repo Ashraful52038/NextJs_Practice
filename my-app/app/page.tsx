@@ -8,7 +8,7 @@ function Homepage() {
 
   const context = useContext(CounterContext);
 
-  if(!context)return <div>Loading....</div>S
+  if(!context)return <div>Loading....</div>
 
   const {state, dispatch}= context as any;
 
