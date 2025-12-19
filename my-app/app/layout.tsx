@@ -1,18 +1,17 @@
-import { Inter } from 'next/font/google';
 import './globals.css';
-const inter = Inter({ subsets: ['latin'] })
-
-import { Metadata } from "next";
 import StoreProvider from './providers/storeProvider';
 
-export const metadata : Metadata ={
-    title: "DeadPool Counter Redux toolkit",
-    description: 'Counter app using Redux Toolkit with Immer',
-};
-export default function RootLayout({ children }) {
+
+
+export default function RootLayout({ 
+  children,
+
+ }:{
+  children: React.ReactNode
+ }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <StoreProvider>
           {children}
         </StoreProvider>
