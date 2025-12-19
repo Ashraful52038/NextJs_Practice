@@ -30,7 +30,7 @@ function counterReducer(state:counterState,action:counterAction):counterState{
 }
 
 //context type
-export const CounterContext = createContext({})
+export const CounterContext = createContext<any>(null);
     
 export default function CounterProvider({children}: {children: ReactNode}){
     const [state, dispatch] = useReducer(counterReducer, {count:0});
