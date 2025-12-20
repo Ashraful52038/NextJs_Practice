@@ -1,3 +1,4 @@
+import CounterProvider from '@/context/Counter';
 import './globals.css';
 import StoreProvider from './providers/storeProvider';
 
@@ -12,9 +13,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <StoreProvider>
-          {children}
-        </StoreProvider>
+        <CounterProvider>
+          <StoreProvider>
+            {children}
+          </StoreProvider>
+        </CounterProvider>
       </body>
     </html>
   )
