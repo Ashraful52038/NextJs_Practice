@@ -1,4 +1,5 @@
 import CounterProvider from '@/context/Counter';
+import { FormProvider } from '@/context/FormContext';
 import './globals.css';
 import StoreProvider from './providers/storeProvider';
 
@@ -13,11 +14,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <CounterProvider>
+        <FormProvider>
+          <CounterProvider>
           <StoreProvider>
             {children}
           </StoreProvider>
         </CounterProvider>
+        </FormProvider>
       </body>
     </html>
   )
