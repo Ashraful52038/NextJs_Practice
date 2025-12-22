@@ -1,6 +1,6 @@
 'use client';
 
-import { decrement, increment } from "@/store/features/counter/counterSlice";
+import { decrement, increment } from "@/store/features/counter/CounterSlice";
 import { AppDispatch } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 
