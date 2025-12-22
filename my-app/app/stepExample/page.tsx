@@ -17,8 +17,8 @@ const StepFormExample = () => {
 
     const steps = [
         { title: 'Login', component: <StepLogin onNext={()=>validateStep(0)} /> },
-        { title: 'Shipping', component: <StepShipping /> },
-        { title: 'Payment', component: <StepPayment /> },
+        { title: 'Shipping', component: <StepShipping onNext={()=>validateStep(1)} /> },
+        { title: 'Payment', component: <StepPayment onNext={()=>validateStep(2)}/> },
         { title: 'Done', component: <StepDone /> },
     ];
 

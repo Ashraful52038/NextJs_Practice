@@ -1,9 +1,11 @@
+import todoReducer from "@/app/Todo/ToDoSlice"; // TodoSlice import করুন
 import { configureStore } from "@reduxjs/toolkit";
 import countReducer from "./features/counter/CounterSlice";
 
 export const store = configureStore({
-    reducer:{
+    reducer: {
         count: countReducer,
+        todos: todoReducer, // ✅ Todo reducer যোগ করুন
     },
 });
 

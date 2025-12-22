@@ -2,8 +2,8 @@ import CounterProvider from '@/context/Counter';
 import { FormProvider } from '@/context/FormContext';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import StoreProvider from '../app/Todo/storeProvider';
 import './globals.css';
-import StoreProvider from './providers/storeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
