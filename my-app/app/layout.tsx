@@ -1,5 +1,7 @@
 import CounterProvider from '@/context/Counter';
 import { FormProvider } from '@/context/FormContext';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { ConfigProvider } from 'antd';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import StoreProvider from '../app/Todo/storeProvider';
@@ -25,7 +27,19 @@ export default function RootLayout({
         <FormProvider>
           <CounterProvider>
           <StoreProvider>
-            {children}
+            {/* Ant Design Registry এবং ConfigProvider যোগ করুন */}
+              <AntdRegistry>
+                <ConfigProvider
+                  theme={{
+                    token: {
+                      colorPrimary: '#3b82f6',
+                      borderRadius: 8,
+                    },
+                  }}
+                >
+                  {children}
+                </ConfigProvider>
+              </AntdRegistry>
           </StoreProvider>
         </CounterProvider>
         </FormProvider>
