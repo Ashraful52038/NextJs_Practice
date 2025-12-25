@@ -1,185 +1,18 @@
 // src/components/pdf-generators/ReactPdfGenerator.tsx
 import { DownloadOutlined, FilePdfOutlined } from '@ant-design/icons';
-import { Document, Font, Page, PDFDownloadLink, StyleSheet, Text, View } from '@react-pdf/renderer';
-import { Button, Tooltip } from 'antd';
+import { Document, Page, pdf, PDFDownloadLink, Text, View } from '@react-pdf/renderer';
+import { Button, notification, Tooltip } from 'antd';
+import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 import React from 'react';
 import { getInvoiceCalculations } from '../Invoices/InvoiceData';
 import { Invoice } from '../Invoices/types';
+import { registerFonts } from './ReactPdfFonts';
+import { combineStyles, componentStyles, pdfStyles } from './ReactPdfStyle';
 
-// Register fonts (optional - if you want custom fonts)
-Font.register({
-  family: 'Helvetica',
-  fonts: [
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf', fontWeight: 'light' },
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf', fontWeight: 'normal' },
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-medium-webfont.ttf', fontWeight: 'medium' },
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf', fontWeight: 'bold' },
-  ]
-});
 
-// Create styles
-const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'Helvetica',
-    fontSize: 11,
-    color: '#334155',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-    borderBottomWidth: 2,
-    borderBottomColor: '#3b82f6',
-    borderBottomStyle: 'solid',
-    paddingBottom: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1e293b',
-  },
-  invoiceInfo: {
-    textAlign: 'right',
-    fontSize: 10,
-    color: '#64748b',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#334155',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    borderBottomStyle: 'solid',
-    paddingBottom: 6,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  infoBox: {
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderStyle: 'solid',
-    flex: 1,
-    marginRight: 16,
-  },
-  infoBoxLast: {
-    marginRight: 0,
-  },
-  infoLabel: {
-    fontSize: 10,
-    color: '#64748b',
-    marginBottom: 4,
-    fontWeight: 'medium',
-  },
-  infoValue: {
-    fontSize: 12,
-    color: '#1e293b',
-    fontWeight: 'normal',
-  },
-  table: {
-    marginTop: 20,
-    marginBottom: 30,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#3b82f6',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-  },
-  tableHeaderCell: {
-    flex: 1,
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    borderBottomStyle: 'solid',
-  },
-  tableCell: {
-    flex: 1,
-    fontSize: 10,
-    color: '#475569',
-  },
-  amountCell: {
-    textAlign: 'right',
-  },
-  totals: {
-    marginTop: 30,
-    alignItems: 'flex-end',
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 250,
-    marginBottom: 8,
-    paddingVertical: 4,
-  },
-  totalLabel: {
-    fontSize: 12,
-    color: '#64748b',
-  },
-  totalValue: {
-    fontSize: 12,
-    color: '#1e293b',
-    fontWeight: 'medium',
-  },
-  grandTotal: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginTop: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-    borderTopStyle: 'solid',
-  },
-  footer: {
-    marginTop: 50,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-    borderTopStyle: 'solid',
-    fontSize: 9,
-    color: '#94a3b8',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  notes: {
-    marginTop: 30,
-    padding: 16,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 4,
-    fontSize: 10,
-    color: '#475569',
-    fontStyle: 'italic',
-  },
-  rightAlign: {
-    textAlign: 'right',
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  uppercase: {
-    textTransform: 'uppercase',
-  },
-});
+// Register fonts
+registerFonts();
 
 // PDF Document Component
 const InvoicePDF = ({ invoice }: { invoice: Invoice }) => {
@@ -187,17 +20,21 @@ const InvoicePDF = ({ invoice }: { invoice: Invoice }) => {
   
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={combineStyles(pdfStyles.page, pdfStyles.bgWhite)}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={componentStyles.invoiceHeader}>
           <View>
-            <Text style={styles.title}>INVOICE</Text>
-            <Text style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+            <Text style={combineStyles(pdfStyles.text2xl, pdfStyles.fontBold, pdfStyles.textGray800)}>
+                INVOICE
+            </Text>
+            <Text style={combineStyles(pdfStyles.textSm, pdfStyles.textGray500, pdfStyles.mt4)}>
               {invoice.companyName}
             </Text>
           </View>
-          <View style={styles.invoiceInfo}>
-            <Text style={styles.bold}>Invoice #{invoice.invoiceNumber}</Text>
+          <View style={pdfStyles.invoiceInfo}>
+            <Text style={combineStyles(pdfStyles.fontBold, pdfStyles.textGray700)}>
+                Invoice #{invoice.invoiceNumber}
+            </Text>
             <Text>Date: {invoice.date}</Text>
             <Text>Due Date: {invoice.dueDate}</Text>
             <Text>Status: {invoice.status}</Text>
@@ -205,47 +42,75 @@ const InvoicePDF = ({ invoice }: { invoice: Invoice }) => {
         </View>
 
         {/* Company & Customer Info */}
-        <View style={styles.row}>
-          <View style={styles.infoBox}>
-            <Text style={styles.infoLabel}>FROM</Text>
-            <Text style={styles.infoValue}>{invoice.companyName}</Text>
-            <Text style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+        <View style={combineStyles(pdfStyles.flexRow, pdfStyles.mb8)}>
+          <View style={pdfStyles.infoBox}>
+            <Text style={combineStyles(
+              pdfStyles.textXs, 
+              pdfStyles.textGray500, 
+              pdfStyles.fontSemibold, 
+              pdfStyles.mb4
+            )}>
+            FROM
+            </Text>
+            <Text style={combineStyles(
+              pdfStyles.textSm,
+              pdfStyles.fontSemibold,
+              pdfStyles.textGray800
+            )}>
+                {invoice.companyName}
+            </Text>
+            <Text style={combineStyles(pdfStyles.textXs, pdfStyles.textGray500, pdfStyles.mt4)}>
               {invoice.companyAddress}
             </Text>
           </View>
-          
-          <View style={[styles.infoBox, styles.infoBoxLast]}>
-            <Text style={styles.infoLabel}>BILL TO</Text>
-            <Text style={styles.infoValue}>{invoice.customer}</Text>
-            <Text style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+          <View style={[pdfStyles.infoBox, { marginRight: 0 }]}>
+            <Text style={combineStyles(
+              pdfStyles.textXs, 
+              pdfStyles.textGray500, 
+              pdfStyles.fontSemibold, 
+              pdfStyles.mb4
+            )}>
+                BILL TO
+            </Text>
+            <Text style={combineStyles(
+              pdfStyles.textSm, 
+              pdfStyles.fontSemibold, 
+              pdfStyles.textGray800
+            )}>
+                {invoice.customer}
+            </Text>
+            <Text style={combineStyles(pdfStyles.textXs, pdfStyles.textGray500, pdfStyles.mt4)}>
               {invoice.customerAddress}
+            </Text>
+            <Text style={combineStyles(pdfStyles.textXs, pdfStyles.textGray500, pdfStyles.mt2)}>
+              {invoice.customerEmail}
             </Text>
           </View>
         </View>
 
         {/* Items Table */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ITEMS</Text>
-          <View style={styles.table}>
+        <View>
+          <Text style={pdfStyles.sectionTitle}>ITEMS</Text>
+          <View style={combineStyles(pdfStyles.mt4, pdfStyles.mb8)}>
             {/* Table Header */}
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderCell, { flex: 3 }]}>Description</Text>
-              <Text style={styles.tableHeaderCell}>Qty</Text>
-              <Text style={styles.tableHeaderCell}>Unit</Text>
-              <Text style={styles.tableHeaderCell}>Unit Price</Text>
-              <Text style={[styles.tableHeaderCell, styles.rightAlign]}>Amount</Text>
+            <View style={componentStyles.tableHeaderRow}>
+              <Text style={[pdfStyles.tableHeaderCell, { flex: 3 }]}>Description</Text>
+              <Text style={pdfStyles.tableHeaderCell}>Qty</Text>
+              <Text style={pdfStyles.tableHeaderCell}>Unit</Text>
+              <Text style={pdfStyles.tableHeaderCell}>Unit Price</Text>
+              <Text style={[pdfStyles.tableHeaderCell, pdfStyles.textRight]}>Amount</Text>
             </View>
             
-            {/* Table Rows */}
+             {/* Table Rows */}
             {invoice.items.map((item, index) => (
-              <View key={index} style={styles.tableRow}>
-                <Text style={[styles.tableCell, { flex: 3 }]}>{item.name}</Text>
-                <Text style={styles.tableCell}>{item.quantity}</Text>
-                <Text style={styles.tableCell}>{item.unit || 'N/A'}</Text>
-                <Text style={styles.tableCell}>
+              <View key={index} style={componentStyles.tableDataRow(index)}>
+                <Text style={[pdfStyles.tableCell, { flex: 3 }]}>{item.name}</Text>
+                <Text style={pdfStyles.tableCell}>{item.quantity}</Text>
+                <Text style={pdfStyles.tableCell}>{item.unit || 'N/A'}</Text>
+                <Text style={pdfStyles.tableCell}>
                   {invoice.currency} {item.price.toFixed(2)}
                 </Text>
-                <Text style={[styles.tableCell, styles.amountCell]}>
+                <Text style={[pdfStyles.tableCell, pdfStyles.textRight]}>
                   {invoice.currency} {(item.quantity * item.price).toFixed(2)}
                 </Text>
               </View>
@@ -253,50 +118,58 @@ const InvoicePDF = ({ invoice }: { invoice: Invoice }) => {
           </View>
         </View>
 
-        {/* Totals */}
-        <View style={styles.totals}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotal:</Text>
-            <Text style={styles.totalValue}>
-              {invoice.currency} {subtotal.toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Tax ({invoice.taxRate}%):</Text>
-            <Text style={styles.totalValue}>
-              {invoice.currency} {tax.toFixed(2)}
-            </Text>
-          </View>
-          <View style={[styles.totalRow, styles.grandTotal]}>
-            <Text style={[styles.totalLabel, styles.grandTotal]}>Total:</Text>
-            <Text style={[styles.totalValue, styles.grandTotal]}>
-              {invoice.currency} {total.toFixed(2)}
-            </Text>
+       {/* Totals */}
+        <View style={combineStyles(pdfStyles.flex, pdfStyles.itemsEnd, pdfStyles.mt8)}>
+          <View style={[pdfStyles.wAuto, pdfStyles.textRight]}>
+            <View style={pdfStyles.totalRow}>
+              <Text style={combineStyles(pdfStyles.textSm, pdfStyles.textGray600)}>
+                Subtotal:
+              </Text>
+              <Text style={combineStyles(pdfStyles.textSm, pdfStyles.textGray800, pdfStyles.fontSemibold)}>
+                {invoice.currency} {subtotal.toFixed(2)}
+              </Text>
+            </View>
+          <View style={pdfStyles.totalRow}>
+              <Text style={combineStyles(pdfStyles.textSm, pdfStyles.textGray600)}>
+                Tax ({invoice.taxRate}%):
+              </Text>
+              <Text style={combineStyles(pdfStyles.textSm, pdfStyles.textGray800, pdfStyles.fontSemibold)}>
+                {invoice.currency} {tax.toFixed(2)}
+              </Text>
+            </View>
+          <View style={combineStyles(
+              pdfStyles.totalRow, 
+              pdfStyles.mt4, 
+              pdfStyles.pt4, 
+              pdfStyles.border, 
+              pdfStyles.borderGray300
+            )}>
+              <Text style={combineStyles(pdfStyles.textBase, pdfStyles.fontBold, pdfStyles.textGray800)}>
+                Total:
+              </Text>
+              <Text style={combineStyles(pdfStyles.textBase, pdfStyles.fontBold, pdfStyles.textGray800)}>
+                {invoice.currency} {total.toFixed(2)}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Payment Method & Notes */}
-        <View style={styles.row}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>PAYMENT DETAILS</Text>
-            <Text style={{ fontSize: 11, color: '#475569', marginTop: 8 }}>
-              Payment Method: {invoice.paymentMethod}
-            </Text>
-          </View>
-        </View>
-
+        {/* Footer Notes */}
         {invoice.notes && (
-          <View style={styles.notes}>
-            <Text style={[styles.infoLabel, { marginBottom: 8 }]}>NOTES</Text>
-            <Text>{invoice.notes}</Text>
+          <View style={combineStyles(pdfStyles.mt8, pdfStyles.notesBox)}>
+            <Text style={combineStyles(
+              pdfStyles.textXs, 
+              pdfStyles.textGray500, 
+              pdfStyles.fontSemibold, 
+              pdfStyles.mb2
+            )}>
+              NOTES
+            </Text>
+            <Text style={combineStyles(pdfStyles.textSm, pdfStyles.textGray700)}>
+              {invoice.notes}
+            </Text>
           </View>
         )}
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text>Generated by Invoice Management System</Text>
-          <Text>Page 1 of 1</Text>
-        </View>
       </Page>
     </Document>
   );
@@ -311,10 +184,11 @@ interface ReactPdfGeneratorProps {
   showIcon?: boolean;
   className?: string;
   fileName?: string;
+  children?: React.ReactNode; 
 }
 
 // Main Component
-export const ReactPdfGenerator: React.FC<ReactPdfGeneratorProps> = ({
+export const ReactPdfDownloadLink: React.FC<ReactPdfGeneratorProps> = ({
   invoice,
   buttonText = 'Download PDF',
   buttonType = 'primary',
@@ -352,55 +226,110 @@ export const ReactPdfGenerator: React.FC<ReactPdfGeneratorProps> = ({
 };
 
 // Batch PDF Generator Component
-interface BatchPdfGeneratorProps {
+interface BatchReactPdfDownloadProps {
   invoices: Invoice[];
   buttonText?: string;
   buttonType?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
+  buttonSize?: 'large' | 'middle' | 'small';
+  className?: string;
 }
 
-export const BatchPdfGenerator: React.FC<BatchPdfGeneratorProps> = ({
-  invoices,
-  buttonText = 'Download All PDFs',
-  buttonType = 'default',
+
+export const BatchReactPdfDownload: React.FC<BatchReactPdfDownloadProps> = ({
+    invoices,
+    buttonText = 'Download All PDFs',
+    buttonType = 'default',
+    buttonSize = 'middle',
+    className = '',
 }) => {
-  const [downloading, setDownloading] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
-  const handleBatchDownload = () => {
-    setDownloading(true);
+  const handleBatchDownload = async() => {
+    if (!invoices || invoices.length === 0) {
+      notification.warning({
+        message: 'No Invoices',
+        description: 'There are no invoices to download.',
+      });
+      return;
+    }
+
+    setLoading(true);
+
+     try {
+      const zip = new JSZip();
+      
+      // Create a folder for invoices
+      const invoiceFolder = zip.folder('invoices');
+      
+      if (!invoiceFolder) {
+        throw new Error('Failed to create zip folder');
+      }
+       // Generate PDF for each invoice
+      for (let i = 0; i < invoices.length; i++) {
+        const invoice = invoices[i];
+        
+        try {
+          const doc = <InvoicePDF invoice={invoice} />;
+          const pdfInstance = pdf(doc);
+          const pdfBlob = await pdfInstance.toBlob();
+          
+          // Add PDF to zip
+          invoiceFolder.file(
+            `invoice-${invoice.invoiceNumber}.pdf`, 
+            pdfBlob
+          );
+        } catch (error) {
+          console.error(`Error generating PDF for invoice ${invoice.invoiceNumber}:`, error);
+        }
+      }
+
+       // Generate zip file
+      const zipBlob = await zip.generateAsync({ 
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+      });
+      
+      // Download zip
+      const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const zipFileName = `invoices-batch-${timestamp}.zip`;
+      
+      saveAs(zipBlob, zipFileName);
+      
+      notification.success({
+        message: 'Download Complete',
+        description: `${invoices.length} invoice(s) downloaded successfully as ${zipFileName}`,
+      });
     
-    // Create individual PDFs for each invoice
-    invoices.forEach((invoice, index) => {
-      // In a real implementation, you would generate and save each PDF
-      // For now, we'll just trigger individual downloads with a delay
-      setTimeout(() => {
-        const link = document.createElement('a');
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        
-        // Note: In production, you would generate actual PDF blobs
-        // This is a simplified example
-        console.log(`Generating PDF for invoice: ${invoice.invoiceNumber}`);
-        
-        document.body.removeChild(link);
-      }, index * 500);
-    });
-
-    // Reset downloading state
-    setTimeout(() => setDownloading(false), invoices.length * 500 + 1000);
+     } catch (error) {
+      console.error('Batch PDF generation failed:', error);
+      notification.error({
+        message: 'Download Failed',
+        description: 'Failed to generate PDF files. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-
-  return (
-    <Button
-      type={buttonType}
-      size="middle"
-      icon={<DownloadOutlined />}
-      loading={downloading}
-      onClick={handleBatchDownload}
-      className="flex items-center gap-2"
-    >
-      {downloading ? 'Generating PDFs...' : buttonText}
-    </Button>
+ return (
+    <Tooltip title={`Download ${invoices.length} invoice(s) as PDFs`}>
+      <Button
+        type={buttonType}
+        size={buttonSize}
+        icon={<DownloadOutlined />}
+        loading={loading}
+        onClick={handleBatchDownload}
+        className={`flex items-center gap-2 ${className}`}
+        disabled={!invoices || invoices.length === 0 || loading}
+      >
+        {loading ? `Generating ${invoices.length} PDFs...` : buttonText}
+      </Button>
+    </Tooltip>
   );
 };
 
-export default ReactPdfGenerator;
+// Export with both names for compatibility
+export const ReactPdfGenerator = ReactPdfDownloadLink;
+export const BatchPdfGenerator = BatchReactPdfDownload;
+
+export default ReactPdfDownloadLink;

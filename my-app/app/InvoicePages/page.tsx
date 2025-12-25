@@ -2,23 +2,20 @@
 'use client';
 
 import {
-    CodeOutlined,
-    DownloadOutlined,
-    FilePdfOutlined,
-    Html5Outlined,
-    InfoCircleOutlined,
-    PrinterOutlined
+  CodeOutlined,
+  FilePdfOutlined,
+  Html5Outlined,
+  PrinterOutlined
 } from '@ant-design/icons';
 import {
-    Alert,
-    Button,
-    Card,
-    Col,
-    Divider,
-    Progress,
-    Row,
-    Space,
-    Tabs
+  Button,
+  Card,
+  Col,
+  Divider,
+  Progress,
+  Row,
+  Space,
+  Tabs
 } from 'antd';
 import { useState } from 'react';
 import { usePdfGeneration } from '../../hooks/PdfGenerator';
@@ -28,11 +25,14 @@ import { MultiplePrintButton, PrintButton } from '../components/pdf-generators/R
 import { BatchReactPdfDownload, ReactPdfDownloadLink } from '../components/pdf-generators/ReactPdf';
 import InvoiceSelector from '../components/Ui/InvoiceSelector';
 import PdfMethodCard from '../components/Ui/PdfMethodCard';
+import AlertBanner from './Module/AlertBanner';
+import Header from './Module/Header';
 
 export default function HomePage() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | 'all'>(1);
   const [activeTab, setActiveTab] = useState('preview');
-  
+  const [isQuickDownloadLoading, setIsQuickDownloadLoading] = useState(false);
+
   const {
     handleHtml2Pdf,
     handleBatchHtml2Pdf,
@@ -96,56 +96,39 @@ export default function HomePage() {
       onGenerate: () => {}, // Handled by component
     },
   ];
+
+  const handleQuickDownload = async () => {
+    setIsQuickDownloadLoading(true);
+    try {
+      if (selectedInvoiceId === 'all') {
+        // Download all invoices
+        await handleBatchHtml2Pdf(invoiceData);
+      } else if (selectedInvoiceId) {
+        // Download single invoice
+        const invoice = invoiceData.find(inv => inv.id === selectedInvoiceId);
+        if (invoice) {
+          await handleHtml2Pdf(invoice.id, invoice.invoiceNumber);
+        }
+      }
+    } catch (error) {
+      console.error('Quick download failed:', error);
+    } finally {
+      setIsQuickDownloadLoading(false);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-800 shadow-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-                Invoice PDF Generator
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">
-                Test and compare different PDF generation methods with Ant Design & Tailwind CSS
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button 
-                type="primary" 
-                icon={<DownloadOutlined />}
-                onClick={() => {
-                  if (isAllSelected) {
-                    handleBatchHtml2Pdf(invoiceData);
-                  } else if (selectedInvoice) {
-                    handleHtml2Pdf(selectedInvoice.id, selectedInvoice.invoiceNumber);
-                  }
-                }}
-                loading={isLoading(isAllSelected ? 'batch-html2pdf' : `html2pdf-${selectedInvoiceId}`)}
-              >
-                Quick Download
-              </Button>
-              <MultiplePrintButton 
-                invoices={invoiceData} 
-                buttonText="Print All"
-                className="no-print"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header
+       onQuickDownload={handleQuickDownload}
+        isQuickDownloadLoading={isQuickDownloadLoading}
+        isAllSelected={selectedInvoiceId === 'all'}
+        selectedInvoiceId={selectedInvoiceId}/>
       
       <div className="container mx-auto px-4 py-8">
         {/* Alert Banner */}
-        <Alert
-          message="PDF Generation Methods Comparison"
-          description="Each method has different strengths. Choose based on your requirements for styling, file size, and control."
-          type="info"
-          showIcon
-          icon={<InfoCircleOutlined />}
-          className="mb-6"
-        />
+        <AlertBanner/>
         
         {/* Invoice Selection */}
         <InvoiceSelector
@@ -244,7 +227,7 @@ export default function HomePage() {
                                 variant="dashed"
                                 icon={<PrinterOutlined />}
                               />
-                              <ReactPdfDownloadLink invoice={selectedInvoice}>
+                              <ReactPdfDownloadLink invoice={selectedInvoice} >
                                 React PDF
                               </ReactPdfDownloadLink>
                             </>

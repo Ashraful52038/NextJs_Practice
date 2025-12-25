@@ -4,7 +4,7 @@ import { invoiceData } from "@/app/components/Invoices/InvoiceData";
 import PrintButton, { MultiplePrintButton } from "@/app/components/pdf-generators/React-to-print";
 import { FilePdfOutlined, Html5Outlined, PrinterOutlined } from "@ant-design/icons";
 import { Button, Card, Divider, Space } from "antd";
-// import { ReactPdfDownloadLink, BatchReactPdfDownload } from '../pdf-generators/ReactPdf';
+import { BatchReactPdfDownload, ReactPdfDownloadLink } from '../../components/pdf-generators/ReactPdf';
 
 
 interface PdfActionProps{

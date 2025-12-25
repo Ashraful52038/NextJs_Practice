@@ -36,6 +36,7 @@ export default function Header({
               icon={<DownloadOutlined />}
               onClick={onQuickDownload}
               loading={isQuickDownloadLoading}
+              disabled={!selectedInvoiceId && !isAllSelected}
             >
               Quick Download
             </Button>
