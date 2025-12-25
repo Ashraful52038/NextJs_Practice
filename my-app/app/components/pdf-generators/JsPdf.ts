@@ -1,5 +1,6 @@
 // src/components/pdf-generators/JsPdfGenerator.ts
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { getInvoiceCalculations } from '../Invoices/InvoiceData';
 import { Invoice } from '../Invoices/types';
 
@@ -59,7 +60,7 @@ export const generateJsPdf = (invoice: Invoice, fileName?: string): boolean => {
       `${invoice.currency} ${(item.quantity * item.price).toFixed(2)}`,
     ]);
     
-    (pdf as any).autoTable({
+    autoTable(pdf,{
       startY: 260,
       head: [['Description', 'Qty', 'Unit', 'Unit Price', 'Amount']],
       body: tableData,
